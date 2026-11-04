@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "claude-bridge",
+  "version": "0.1.0",
+  "description": "Lets a local claude-bridge MCP server drive this Chrome profile over the DevTools Protocol.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7axFxVwvetbVVea77o/G0bt5sNwkqx5D/sx9j1zygsg/GrE334X6d/90+wzt3/t+z3Pkohqk2JJYLcXOFFvN8q5Xoi70D2IOvh1Ff7RJMRKRlUG31K72Tw6imKP0581nxEUSYprPMC2bbIPtRwrlY5/0oJrKbGG1uxfFP4uW+nnMer8h9sFKt44AjcyefwmqzQtb/Ksul1EPpthbtU8y3mYCjwFJbyX7vxrZrFcvQKyCfDDBOgAUBZbYXsd4rzg8lQJbQWhRpFNw81zWfvntlC12NLRVGcdJxzFL7bjTa660HsxuDAL5oTdqUHah4bIfnzv559cqRthcDLvGobzsgQIDAQAB",
+  "minimum_chrome_version": "120",
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["debugger", "tabs", "tabGroups", "storage", "alarms"],
+  "options_ui": { "page": "options.html", "open_in_tab": true },
+  "action": { "default_title": "claude-bridge" },
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+}

@@ -14,7 +14,8 @@
   "scripts": {
     "start": "node server/index.mjs",
     "test": "node --test \"test/**/*.test.mjs\"",
-    "fixture": "node test/fixtures/serve.mjs"
+    "fixture": "node test/fixtures/serve.mjs --make-big",
+    "e2e": "node test/e2e.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

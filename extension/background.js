@@ -225,6 +225,8 @@ async function attach(tabId) {
     }
     s.attached = true;
     await Promise.all([cdp(tabId, "Page.enable"), cdp(tabId, "Runtime.enable"), cdp(tabId, "Network.enable"), cdp(tabId, "Log.enable")]);
+    // Background tabs have no focus, so typed text and key events would go nowhere.
+    await cdp(tabId, "Emulation.setFocusEmulationEnabled", { enabled: true }).catch(() => {});
   })();
   try {
     await s.attaching;
@@ -667,15 +669,33 @@ const TOOLS = {
     if (ref) {
       await cdp(tabId, "DOM.scrollIntoViewIfNeeded", { backendNodeId: await resolveBackendId(s, ref) });
     } else {
-      const vp = await viewport(tabId);
-      await cdp(tabId, "Input.dispatchMouseEvent", {
-        type: "mouseWheel",
-        x: Number.isFinite(x) ? x : vp.width / 2,
-        y: Number.isFinite(y) ? y : vp.height / 2,
-        deltaX: dx,
-        deltaY: dy,
-      });
-      await new Promise((r) => setTimeout(r, 150)); // let smooth scrolling settle
+      const before = await viewport(tabId);
+      const px = Number.isFinite(x) ? x : before.width / 2;
+      const py = Number.isFinite(y) ? y : before.height / 2;
+      await cdp(tabId, "Input.dispatchMouseEvent", { type: "mouseWheel", x: px, y: py, deltaX: dx, deltaY: dy });
+      // Wheel scrolling is asynchronous (and slow in background tabs): wait for movement.
+      let moved = false;
+      for (let i = 0; i < 10 && !moved; i++) {
+        await new Promise((r) => setTimeout(r, 100));
+        const now = await viewport(tabId);
+        moved = now.pageX !== before.pageX || now.pageY !== before.pageY;
+      }
+      if (!moved && (dx || dy)) {
+        // Fall back to scrolling the nearest scrollable ancestor of the point (or the page).
+        await cdp(tabId, "Runtime.evaluate", {
+          expression: `(() => {
+            let el = document.elementFromPoint(${px}, ${py});
+            while (el && el !== document.documentElement) {
+              const s = getComputedStyle(el);
+              if (/(auto|scroll)/.test(s.overflowY + s.overflowX) && (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth)) {
+                el.scrollBy(${dx}, ${dy}); return;
+              }
+              el = el.parentElement;
+            }
+            window.scrollBy(${dx}, ${dy});
+          })()`,
+        });
+      }
     }
     const vp = await viewport(tabId);
     return { scrollX: Math.round(vp.pageX), scrollY: Math.round(vp.pageY) };

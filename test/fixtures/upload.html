@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>claude-bridge fixture</title>
+    <style>
+      body { font: 15px system-ui, sans-serif; max-width: 720px; margin: 32px auto; padding: 0 16px; }
+      section { border: 1px solid #ccc; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+      output { display: block; font-family: monospace; white-space: pre-wrap; margin-top: 6px; }
+      .spacer { height: 1400px; }
+    </style>
+  </head>
+  <body>
+    <h1>Upload test</h1>
+
+    <section>
+      <h2>Direct file input</h2>
+      <label>Video <input id="direct" type="file" multiple /></label>
+      <output id="directOut">no file</output>
+    </section>
+
+    <section>
+      <h2>Input created on click</h2>
+      <button id="lazyBtn" type="button">Choose video…</button>
+      <output id="lazyOut">no file</output>
+    </section>
+
+    <section>
+      <h2>Form controls</h2>
+      <label>Caption <input id="caption" type="text" /></label>
+      <label>Notes <textarea id="notes"></textarea></label>
+      <label>Privacy
+        <select id="privacy">
+          <option value="public">Public</option>
+          <option value="unlisted">Unlisted</option>
+          <option value="private">Private</option>
+        </select>
+      </label>
+      <label><input id="agree" type="checkbox" /> I agree</label>
+      <button id="send" type="button">Send</button>
+      <output id="formOut"></output>
+    </section>
+
+    <section>
+      <h2>Dialogs and keys</h2>
+      <button id="alertBtn" type="button">Alert</button>
+      <button id="confirmBtn" type="button">Confirm</button>
+      <button id="promptBtn" type="button">Prompt</button>
+      <output id="dialogOut"></output>
+      <output id="keyOut"></output>
+    </section>
+
+    <div class="spacer"></div>
+    <p id="bottom">Bottom of the page</p>
+
+    <script>
+      const show = (out, files) => {
+        out.textContent = [...files].map((f) => `${f.name} ${f.size}`).join("\n") || "no file";
+      };
+      document.getElementById("direct").addEventListener("change", (e) => show(document.getElementById("directOut"), e.target.files));
+      document.getElementById("lazyBtn").addEventListener("click", () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.addEventListener("change", () => show(document.getElementById("lazyOut"), input.files));
+        input.click();
+      });
+      document.getElementById("send").addEventListener("click", () => {
+        const v = (id) => document.getElementById(id);
+        v("formOut").textContent = JSON.stringify({ caption: v("caption").value, notes: v("notes").value, privacy: v("privacy").value, agree: v("agree").checked });
+        console.log("sent", v("caption").value);
+      });
+      document.getElementById("alertBtn").addEventListener("click", () => {
+        alert("hello from the fixture");
+        document.getElementById("dialogOut").textContent = "alert closed";
+      });
+      document.getElementById("confirmBtn").addEventListener("click", () => {
+        document.getElementById("dialogOut").textContent = "confirm: " + confirm("Proceed?");
+      });
+      document.getElementById("promptBtn").addEventListener("click", () => {
+        document.getElementById("dialogOut").textContent = "prompt: " + prompt("Your name?", "");
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && e.shiftKey) document.getElementById("keyOut").textContent = "shift+Enter";
+      });
+      console.info("fixture loaded");
+    </script>
+  </body>
+</html>

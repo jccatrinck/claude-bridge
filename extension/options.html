@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>claude-bridge options</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fbfaf8;
+        --fg: #1f1d1a;
+        --muted: #6b665e;
+        --line: #ddd8cf;
+        --accent: #c15f3c;
+        --ok: #2e7d32;
+        --bad: #c62828;
+        --field: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1b19;
+          --fg: #ece9e3;
+          --muted: #a39e94;
+          --line: #3a3833;
+          --field: #262522;
+        }
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, "Segoe UI", sans-serif; }
+      main { max-width: 680px; margin: 0 auto; padding: 32px 16px 64px; }
+      h1 { font-size: 22px; margin: 0 0 4px; }
+      .sub { color: var(--muted); margin: 0 0 24px; }
+      .status { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 28px; }
+      .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+      .dot.connected { background: var(--ok); }
+      .dot.refused, .dot.offline, .dot.setup { background: var(--bad); }
+      .status button { margin-left: auto; }
+      label { display: block; font-weight: 600; margin: 18px 0 4px; }
+      .hint { color: var(--muted); font-size: 12.5px; margin: 2px 0 0; }
+      input, textarea { width: 100%; font: inherit; color: inherit; background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+      textarea { min-height: 84px; font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+      input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+      code { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; align-items: center; }
+      button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--field); color: inherit; cursor: pointer; }
+      button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+      #saved { color: var(--ok); }
+      .warn { border-left: 3px solid var(--accent); padding: 8px 12px; margin-top: 32px; color: var(--muted); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>claude-bridge</h1>
+      <p class="sub">Connects this Chrome profile to the local claude-bridge MCP server.</p>
+
+      <div class="status">
+        <span class="dot" id="dot"></span>
+        <span><strong id="state">…</strong> <span id="detail" class="hint"></span></span>
+        <button id="reconnect" type="button">Reconnect</button>
+      </div>
+
+      <form id="form">
+        <label for="profileName">Profile name</label>
+        <input id="profileName" required pattern="[\w.\-]{1,64}" placeholder="personal" autocomplete="off" />
+        <p class="hint">How Claude refers to this profile, e.g. <code>personal</code>. Letters, digits, <code>.</code> <code>_</code> <code>-</code>. Required.</p>
+
+        <label for="token">Pairing token</label>
+        <input id="token" type="password" placeholder="paste the token" autocomplete="off" />
+        <p class="hint">From <code>%APPDATA%\claude-bridge\token</code> (written when the MCP server first runs).</p>
+
+        <label for="port">Hub port</label>
+        <input id="port" type="number" min="1" max="65535" placeholder="47811" />
+
+        <label for="blockedSites">Blocked sites</label>
+        <textarea id="blockedSites" placeholder="mybank.com&#10;*.corp.example&#10;https://mail.example.com/secret/*"></textarea>
+        <p class="hint">One per line. The bridge refuses to act on matching pages. <code>bank.com</code> covers its subdomains too.</p>
+
+        <label for="uploadRoots">Upload roots</label>
+        <textarea id="uploadRoots" placeholder="C:\Users\you\Projects&#10;C:\Users\you\Videos"></textarea>
+        <p class="hint">Folders <code>upload</code> may read files from (checked by the MCP server, symlinks resolved). Empty = your home folder.</p>
+
+        <div class="row">
+          <button class="primary" type="submit">Save</button>
+          <span id="saved" hidden>Saved</span>
+          <span style="flex: 1"></span>
+          <button id="export" type="button">Export</button>
+          <button id="import" type="button">Import</button>
+          <input id="importFile" type="file" accept="application/json,.json" hidden />
+        </div>
+      </form>
+
+      <p class="hint" style="margin-top: 24px">Profile id: <code id="profileId"></code></p>
+
+      <div class="warn">
+        This extension gives the local MCP server full control of this Chrome profile through the DevTools Protocol: it can read
+        every page, run JavaScript and use your sign-ins. Only install it in profiles you want Claude to drive.
+      </div>
+    </main>
+    <script src="options.js" type="module"></script>
+  </body>
+</html>

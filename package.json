@@ -1,0 +1,23 @@
+{
+  "name": "claude-bridge",
+  "version": "0.1.0",
+  "description": "Local MCP server + Chrome extension that lets Claude drive Chrome profiles over the DevTools Protocol",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "claude-bridge": "server/index.mjs"
+  },
+  "scripts": {
+    "start": "node server/index.mjs",
+    "test": "node --test \"test/**/*.test.mjs\"",
+    "fixture": "node test/fixtures/serve.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "ws": "^8.22.1"
+  }
+}

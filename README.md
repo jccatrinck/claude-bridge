@@ -46,7 +46,9 @@ Add `-s user` to make it available in every project.
 }
 ```
 
-Then restart Claude Desktop. You can run both clients at once. The first process to start becomes the hub, and the other relays through it. If the hub exits, another process takes over within a second or two, and the extensions reconnect on their own.
+Then restart Claude Desktop. The tools only show up in chats that can reach this PC's local MCP servers. A chat running remotely (in the cloud) won't see them until it's linked to this computer.
+
+You can run both clients at once. The first process to start becomes the hub, and the other relays through it. If the hub exits, another process takes over within a second or two, and the extensions reconnect on their own.
 
 The first time the server runs, it writes the pairing token to `%APPDATA%\claude-bridge\token`. On macOS that's `~/Library/Application Support/claude-bridge/token`, and on Linux `~/.config/claude-bridge/token`.
 
@@ -97,6 +99,8 @@ If Claude in Chrome is installed in the same profile, disable it there: only one
 | `network` | Returns requests buffered since the bridge attached to the tab (`pattern`, `clear`, `limit`). |
 | `wait` | Sleeps for up to 10 s. |
 | `dialog` | Answers a JavaScript alert, confirm or prompt (`accept`, `text`). |
+
+The server also sends MCP `instructions` (the workflow above, in short) and marks each tool with annotations. `list_profiles`, `tabs_list`, `snapshot`, `find`, `screenshot`, `console`, `network` and `wait` are read-only, which suits auto-approval. `eval`, `upload`, `tab_close` and the input tools (`click`, `type`, `key`, `fill`, `navigate`, `dialog`) are marked destructive, because they can submit forms or change pages. Results such as `tab_open` and `snapshot` carry a short `next` hint.
 
 Refs belong to one tab. They stay valid until that tab navigates. After a navigation, take a new `snapshot` or use `find`.
 

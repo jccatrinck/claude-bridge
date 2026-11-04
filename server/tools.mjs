@@ -9,7 +9,7 @@ const ref = { type: "string", description: 'Element ref from snapshot or find, e
 
 const tool = (name, description, properties = {}, required = [], { withProfile = true } = {}) => ({
   name,
-  description,
+  description: `Chrome (claude-bridge): ${description}`,
   inputSchema: {
     type: "object",
     properties: withProfile ? { ...properties, profile } : properties,
@@ -161,5 +161,33 @@ export const TOOLS = [
     ["tabId", "accept"],
   ),
 ];
+
+// Human titles and MCP behaviour hints. Interaction tools can submit forms, so they stay destructive.
+const META = {
+  list_profiles: ["Chrome: list connected profiles", { readOnlyHint: true, openWorldHint: false }],
+  tabs_list: ["Chrome: list tabs", { readOnlyHint: true }],
+  tab_open: ["Chrome: open tab", { destructiveHint: false }],
+  tab_close: ["Chrome: close tab", { destructiveHint: true, idempotentHint: true }],
+  navigate: ["Chrome: navigate tab", { destructiveHint: true }],
+  screenshot: ["Chrome: screenshot tab", { readOnlyHint: true }],
+  snapshot: ["Chrome: page accessibility snapshot", { readOnlyHint: true }],
+  find: ["Chrome: find elements", { readOnlyHint: true }],
+  click: ["Chrome: click element", { destructiveHint: true }],
+  type: ["Chrome: type text", { destructiveHint: true }],
+  key: ["Chrome: press keys", { destructiveHint: true }],
+  scroll: ["Chrome: scroll", { destructiveHint: false }],
+  fill: ["Chrome: fill form field", { destructiveHint: true }],
+  upload: ["Chrome: upload local files", { destructiveHint: true }],
+  eval: ["Chrome: run JavaScript in page", { destructiveHint: true }],
+  console: ["Chrome: read console log", { readOnlyHint: true }],
+  network: ["Chrome: read network log", { readOnlyHint: true }],
+  wait: ["Wait (claude-bridge)", { readOnlyHint: true, openWorldHint: false }],
+  dialog: ["Chrome: answer JavaScript dialog", { destructiveHint: true }],
+};
+for (const t of TOOLS) {
+  const [title, hints] = META[t.name];
+  t.title = title;
+  t.annotations = { title, readOnlyHint: false, openWorldHint: true, ...hints };
+}
 
 export const TOOL_NAMES = new Set(TOOLS.map((t) => t.name));

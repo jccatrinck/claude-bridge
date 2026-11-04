@@ -22,7 +22,32 @@ const HINTS = {
     'For uploads, open chrome://extensions → claude-bridge → Details and turn on "Allow access to file URLs", which Chrome requires before an extension may hand local files to a page.',
 };
 
+export const INSTRUCTIONS = [
+  "claude-bridge drives the user's real Chrome (their own profiles and sign-ins) through a paired extension.",
+  'Workflow: list_profiles → tab_open (returns tabId) → snapshot or find (returns refs like "e12") → click / type / fill / upload by ref → screenshot to verify.',
+  "Pass `profile` on every call when more than one profile is connected; calls without it fail and list the names.",
+  'Work in tabs you opened. tabs_list shows only the "Claude" tab group unless all: true.',
+  "If an action reports dialogOpened, answer it with the dialog tool before anything else in that tab.",
+  "upload takes absolute local file paths (no size limit) and works on a file input or on the button that opens a file chooser.",
+].join("\n");
+
+const noProfilesText = () =>
+  `No Chrome profiles are connected. In Chrome, open the claude-bridge extension options, set a profile name and paste the pairing token from ${tokenPath()}. Then call list_profiles again.`;
+
+const NEXT = {
+  tab_open: () => "Call snapshot (or find) with this tabId to get element refs.",
+  list_profiles: (r) => (r.length > 1 ? `Pass profile: "<name>" on every call (one of: ${r.map((p) => p.name).join(", ")}).` : undefined),
+  snapshot: () => "Use the refs with click / type / fill / upload. Refs reset when the page navigates.",
+};
+
 export function formatResult(tool, result) {
+  if (tool === "list_profiles" && Array.isArray(result) && result.length === 0) return { content: [{ type: "text", text: noProfilesText() }] };
+  const next = NEXT[tool]?.(result);
+  if (next) {
+    if (Array.isArray(result)) result = { profiles: result, next };
+    else if (result && typeof result.text === "string") result = { text: `${result.text}\n\n# next: ${next}` };
+    else if (result && typeof result === "object") result = { ...result, next };
+  }
   if (tool === "screenshot" && result?.data) {
     const { data, mimeType = "image/jpeg", ...meta } = result;
     return { content: [{ type: "image", data, mimeType }, { type: "text", text: JSON.stringify(meta) }] };
@@ -43,7 +68,7 @@ async function main() {
   const bridge = new Bridge({ port: hubPort(), token, allowedOrigins: allowedOrigins(), log });
   bridge.start().catch((e) => log(`startup failed: ${e.message}`));
 
-  const server = new Server({ name: "claude-bridge", version: pkg.version }, { capabilities: { tools: {} } });
+  const server = new Server({ name: "claude-bridge", version: pkg.version }, { capabilities: { tools: {} }, instructions: INSTRUCTIONS });
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOLS }));
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
     const name = req.params.name;

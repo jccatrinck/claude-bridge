@@ -5,6 +5,15 @@
   "type": "module",
   "license": "MIT",
   "private": true,
+  "author": "Jesse Catrinck",
+  "homepage": "https://github.com/jccatrinck/claude-bridge#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jccatrinck/claude-bridge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jccatrinck/claude-bridge/issues"
+  },
   "engines": {
     "node": ">=22"
   },

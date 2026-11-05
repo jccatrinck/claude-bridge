@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Check tag matches package.json and manifest.json
+        run: node scripts/sync-version.mjs --check "$GITHUB_REF_NAME"
+      - name: Package the extension
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          (cd extension && zip -r "../claude-bridge-extension-$VERSION.zip" .)
+          git archive --format=zip --prefix="claude-bridge-$VERSION/" -o "claude-bridge-$VERSION.zip" "$GITHUB_REF_NAME"
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" \
+            "claude-bridge-extension-$VERSION.zip" \
+            "claude-bridge-$VERSION.zip" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

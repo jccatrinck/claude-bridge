@@ -21,6 +21,8 @@ cd claude-bridge
 npm install
 ```
 
+Or download `claude-bridge-X.Y.Z.zip` from the [Releases](https://github.com/jccatrinck/claude-bridge/releases) page, unzip it, and run `npm install` inside.
+
 ### 1. Register the MCP server
 
 **Claude Code:**
@@ -174,6 +176,17 @@ test/        node:test suites, fixtures/upload.html + serve.mjs, e2e.mjs
 - `npm test` runs the unit and integration tests: protocol validation, routing between two fake extensions, missing and ambiguous profiles, hub takeover, bad token and bad origin, upload path checks including symlinks, snapshot refs against a mocked AX tree, and two MCP clients over stdio sharing one hub.
 - `npm run fixture` serves `test/fixtures/upload.html` at `http://127.0.0.1:47900/` and writes a 50 MB test file into the temp folder, for manual checks.
 - `CHROME=<path to Chrome for Testing> npm run e2e` runs a full check against a real browser with the extension loaded, in a throwaway profile. The steps are: open, snapshot, find, click, type, keys, fill, a 50 MB upload by input and by chooser, screenshot, dialogs, scroll, console, network, navigate, a blocked site, and closing the tab. Branded Chrome ignores `--load-extension`, so get Chrome for Testing with `npx @puppeteer/browsers install chrome@stable`.
+
+### Releasing
+
+The version lives in `package.json` and `extension/manifest.json`, and `npm version` keeps them in step:
+
+```sh
+npm version patch        # or minor / major: bumps both files, commits "vX.Y.Z" and tags it
+git push --follow-tags   # pushes the commit and the tag
+```
+
+Pushing a `v*` tag runs `.github/workflows/release.yml`. It runs the tests, checks that the tag matches both files, and publishes a GitHub release with generated notes, the packaged extension (`claude-bridge-extension-X.Y.Z.zip`) and the source (`claude-bridge-X.Y.Z.zip`). Chrome needs plain numeric versions, so don't use suffixes such as `-beta`.
 
 Not in v1: GIF recording, shortcuts, and in-page panels. Snapshots cover the main frame only; iframe content isn't included.
 
